@@ -50,6 +50,9 @@ desktop.ini
 # Logs
 *.log
 
+# Local configuration
+local*.properties
+
 # Temporary files
 *.tmp
 *.bak

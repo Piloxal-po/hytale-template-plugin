@@ -1,371 +1,143 @@
-# Hytale Plugin Template
+# Hytale Plugin Development Environment
 
-A minimal, ready-to-use template for creating Hytale plugins with modern build tools and automated testing.
-
-> **✨ Builds immediately without any changes!** Clone and run `./gradlew shadowJar` to get a working plugin JAR.
+This project is a pre-configured development environment for creating and testing Hytale plugins. It features a powerful Gradle setup that automates the process of running a local Hytale server with your plugin installed.
 
 ## Features
 
-✅ **Modern Build System** - Gradle with Kotlin DSL  
-✅ **Automated Testing** - Custom Gradle plugin for one-command server testing  
-✅ **Java 25** - Latest Java features  
-✅ **ShadowJar** - Automatic dependency bundling  
-✅ **CI/CD Ready** - GitHub Actions workflow included  
-✅ **Minimal Structure** - Only essential files, write your own code  
+- **Automated Server Setup**: Finds your local Hytale installation and sets up a test server automatically.
+- **Dynamic Configuration**: Control server behavior via a simple `local.properties` file.
+- **One-Command Execution**: Run a single command to build your plugin and launch the server.
+- **Fast Iteration**: By default, the server environment is preserved for faster startups.
+- **CI/CD Ready**: Includes a GitHub Actions workflow for automated builds.
 
 ---
 
-## Quick Start
+## 🚀 Quick Start
 
 ### Prerequisites
 
-- **Java 25 JDK** - [Download here](https://www.oracle.com/java/technologies/downloads/)
-- **IntelliJ IDEA** - [Download here](https://www.jetbrains.com/idea/download/) (Community Edition is fine)
-- **Git** - [Download here](https://git-scm.com/)
+1.  **Java 21 JDK**: Ensure you have a Java 21 JDK installed and configured.
+2.  **Hytale Game**: You must have the Hytale game installed on your machine.
 
-### 1. Clone or Download
+### 1. First-Time Launch
 
-```bash
-git clone https://github.com/yourusername/hytale-plugin-template.git
-cd hytale-plugin-template
-```
-
-**The template builds immediately without any changes!**  
-You can customize it later when you're ready to develop your plugin.
-
-### 2. Build Immediately (No Changes Needed!)
-
-The template works out-of-the-box:
+The first time you run the server, a `local.properties` file will be created for you.
 
 ```bash
-# Windows
-gradlew.bat shadowJar
+# For Windows
+gradlew.bat runServer
 
-# Linux/Mac
-./gradlew shadowJar
+# For macOS/Linux
+./gradlew runServer
 ```
 
-Your plugin JAR will be in: `build/libs/TemplatePlugin-1.0.0.jar`
+The server will likely fail on this first run, which is **normal**. The script will create a `local.properties` file at the root of the project.
 
-### 3. Customize Your Plugin (Optional)
+### 2. Configure `local.properties`
 
-When ready to customize, edit these files:
+Open the newly created `local.properties` file. It will look like this:
 
-**`settings.gradle.kts`:**
-```kotlin
-rootProject.name = "your-plugin-name"
-```
-
-**`gradle.properties`:**
 ```properties
-pluginGroup=com.yourname
-pluginVersion=1.0.0
-pluginDescription=Your plugin description
+# --- Player Information (for singleplayer/offline mode) ---
+hytale.owner.name=
+hytale.owner.uuid=
+
+# --- Hytale Version ---
+hytale.version=latest
+
+# --- Server Startup Settings ---
+hytale.auth.mode=authenticated
+hytale.singleplayer.enabled=false
 ```
 
-**`src/main/resources/manifest.json`:**
-```json
-{
-  "Group": "YourName",
-  "Name": "YourPluginName",
-  "Main": "com.yourname.yourplugin.YourPlugin"
-}
-```
+- **If you plan to use `authenticated` mode (recommended):** You don't need to change anything at first.
+- **If you plan to use `offline` mode:**
+    1. Set `hytale.auth.mode=offline`.
+    2. Set `hytale.singleplayer.enabled=true`.
+    3. **Fill in `hytale.owner.name` and `hytale.owner.uuid`** with your Hytale username and UUID.
 
-**Rename the main plugin class:**
-- Rename `src/main/java/com/example/templateplugin/TemplatePlugin.java`
-- Update package name to match your `pluginGroup`
+### 3. Run the Server Again
 
-### 4. Build Your Plugin
+Now, run the same command again:
 
 ```bash
-# Windows
-gradlew.bat shadowJar
-
-# Linux/Mac
-./gradlew shadowJar
-```
-
-Your plugin JAR will be in: `build/libs/YourPluginName-1.0.0.jar`
-
-### 5. Implement Your Plugin
-
-Write your plugin code in `src/main/java/`:
-- Commands
-- Event listeners
-- Services
-- Storage
-- Utilities
-
-See our [documentation](../Documentation/) for examples and patterns.
-
-### 6. Test Your Plugin (Automated!)
-
-```bash
-# Windows
-gradlew.bat runServer
-
-# Linux/Mac
 ./gradlew runServer
 ```
 
-This will:
-1. Download the Hytale server (cached for future runs)
-2. Build your plugin
-3. Copy it to the server's plugins folder
-4. Start the server with interactive console
+The server will start.
+
+### 4. Authenticate (for `authenticated` mode)
+
+If you are using the default `authenticated` mode, the script will automatically send the `/auth login device` command to the server. In your console, you will see a message like this:
+
+```
+[INFO] [AbstractCommand] ===================================================================
+[INFO] [AbstractCommand] DEVICE AUTHORIZATION
+[INFO] [AbstractCommand] ===================================================================
+[INFO] [AbstractCommand] Visit: https://oauth.accounts.hytale.com/oauth2/device/verify
+[INFO] [AbstractCommand] Enter code: LTMqxw4a
+[INFO] [AbstractCommand] Or visit: https://oauth.accounts.hytale.com/oauth2/device/verify?user_code=LTMqxw4a
+[INFO] [AbstractCommand] ===================================================================
+```
+
+1.  Click the link provided (`.../verify?user_code=...`).
+2.  Authorize the device in your web browser.
+3.  Once authorized, you can connect to the server from your Hytale client.
 
 ---
 
-## Project Structure
+## ⚙️ Configuration (`local.properties`)
 
-```
-TemplatePlugin/
-├── .github/workflows/
-│   └── build.yml                    # CI/CD workflow
-├── buildSrc/
-│   ├── build.gradle.kts             # Custom plugin configuration
-│   └── src/main/kotlin/
-│       └── RunHytalePlugin.kt       # Automated server testing
-├── src/main/
-│   ├── java/com/example/templateplugin/
-│   │   └── TemplatePlugin.java      # Minimal main class (example)
-│   └── resources/
-│       └── manifest.json            # Plugin metadata
-├── .gitignore                       # Git ignore rules
-├── build.gradle.kts                 # Build configuration
-├── gradle.properties                # Project properties
-├── settings.gradle.kts              # Project settings
-├── LICENSE                          # MIT License
-└── README.md                        # This file
-```
+This file gives you full control over the test server's behavior.
 
-**Note:** This is a minimal template. Create your own folder structure:
-- `commands/` - For command implementations
-- `listeners/` - For event listeners
-- `services/` - For business logic
-- `storage/` - For data persistence
-- `utils/` - For utility classes
-- `config/` - For configuration management
+-   `hytale.owner.name` / `hytale.owner.uuid`
+    -   Your Hytale username and UUID.
+    -   **Required** only if `hytale.singleplayer.enabled` is `true`.
+
+-   `hytale.version`
+    -   The game version folder to use from your Hytale installation.
+    -   Default: `latest`
+
+-   `hytale.auth.mode`
+    -   `authenticated`: (Default) Requires online authentication. The script will help you with this.
+    -   `offline`: For local/LAN play. Requires `singleplayer.enabled=true` and owner information.
+    -   `insecure`: A developer-only mode that may not be compatible with release clients.
+
+-   `hytale.singleplayer.enabled`
+    -   `true`: Runs the server as a singleplayer world. Required for `offline` mode.
+    -   `false`: (Default) Runs the server as a multiplayer instance.
 
 ---
 
-## Development Workflow
+## 🛠️ Advanced Usage
 
-### Building
+### Forcing a Clean Run
+
+By default, the script reuses the existing server files in the `run/` directory for faster startups. To delete everything and start from a clean slate (e.g., after a game update), use the `-PcleanRun` project property:
 
 ```bash
-# Compile only
-./gradlew compileJava
-
-# Build plugin JAR
-./gradlew shadowJar
-
-# Clean and rebuild
-./gradlew clean shadowJar
+./gradlew runServer -PcleanRun
 ```
 
-### Testing
+### Debugging the Server
+
+To start the server with a Java Debug Wire Protocol (JDWP) agent, allowing you to attach a debugger, use the `-Pdebug` project property:
 
 ```bash
-# Run server with your plugin
-./gradlew runServer
-
-# Run unit tests
-./gradlew test
-
-# Clean test server
-rm -rf run/
-```
-
-### Debugging
-
-```bash
-# Run server in debug mode
 ./gradlew runServer -Pdebug
-
-# Then connect your IDE debugger to localhost:5005
 ```
+
+The server will wait for a debugger to connect on **port 5005**.
 
 ---
 
-## Customization
+## 📦 Plugin Development
 
-### Adding Dependencies
-
-Edit `build.gradle.kts`:
-
-```kotlin
-dependencies {
-    // Hytale API (provided by server)
-    compileOnly(files("libs/hytale-server.jar"))
-    
-    // Your dependencies (will be bundled)
-    implementation("com.google.code.gson:gson:2.10.1")
-    
-    // Test dependencies
-    testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
-}
-```
-
-### Configuring Server Testing
-
-**Run Hytale Server** - A Gradle plugin to download and run a Hytale server for development and testing purposes. The server files will be located in the `run/` directory of the project. Before starting the server it will compile (shadowJar task) and copy the plugin jar to the server's `plugins/` folder.
-
-**Usage:**
-
-Edit `build.gradle.kts`:
-
-```kotlin
-runHytale {
-    jarUrl = "url to hytale server jar"
-}
-```
-
-Run the server with:
+-   Your plugin's source code is located in `src/main/java`.
+-   To build the plugin JAR without running the server, use the `shadowJar` task:
 
 ```bash
-# Windows
-gradlew.bat runServer
-
-# Linux/Mac
-./gradlew runServer
+./gradlew shadowJar
 ```
 
-**Features:**
-- ✅ Automatic server JAR download and caching
-- ✅ Compiles and deploys your plugin automatically
-- ✅ Starts server with interactive console
-- ✅ One-command workflow: `./gradlew runServer`
-- ✅ Server files in `run/` directory (gitignored)
-
-### Implementing Your Plugin
-
-**Recommended folder structure:**
-```
-src/main/java/com/yourname/yourplugin/
-├── YourPlugin.java          # Main class
-├── commands/                # Commands
-├── listeners/               # Event listeners
-├── services/                # Business logic
-├── storage/                 # Data persistence
-├── config/                  # Configuration
-└── utils/                   # Utilities
-```
-
-**See our documentation for examples:**
-- [Getting Started with Plugins](../Documentation/07-getting-started-with-plugins.md)
-- [Advanced Plugin Patterns](../Documentation/12-advanced-plugin-patterns.md)
-- [Common Plugin Features](../Documentation/14-common-plugin-features.md)
-
----
-
-## CI/CD
-
-This template includes a GitHub Actions workflow that:
-
-1. ✅ Builds your plugin on every push
-2. ✅ Runs tests
-3. ✅ Uploads artifacts
-4. ✅ Creates releases (when you tag)
-
-### Creating a Release
-
-```bash
-git tag v1.0.0
-git push origin v1.0.0
-```
-
-GitHub Actions will automatically build and create a release with your plugin JAR.
-
----
-
-## Best Practices
-
-### ✅ DO:
-
-- Use the Service-Storage pattern for data management
-- Write unit tests for your business logic
-- Use structured logging (not `System.out.println`)
-- Handle errors gracefully
-- Document your public API
-- Version your releases semantically (1.0.0, 1.1.0, etc.)
-
-### ❌ DON'T:
-
-- Hardcode configuration values
-- Block the main thread with heavy operations
-- Ignore exceptions
-- Use deprecated APIs
-- Commit sensitive data (API keys, passwords)
-
----
-
-## Troubleshooting
-
-### Build Fails
-
-```bash
-# Clean and rebuild
-./gradlew clean build --refresh-dependencies
-```
-
-### Server Won't Start
-
-1. Check that `jarUrl` in `build.gradle.kts` is correct
-2. Verify Java 25 is installed: `java -version`
-3. Check logs in `run/logs/`
-
-### Plugin Not Loading
-
-1. Verify `manifest.json` has correct `Main` class
-2. Check server logs for errors
-3. Ensure all dependencies are bundled in JAR
-
----
-
-## Documentation
-
-For detailed guides on plugin development, see:
-
-- [Hytale Modding Documentation](https://github.com/yourusername/hytale-modding/tree/main/Documentation)
-- [Getting Started with Plugins](../Documentation/07-getting-started-with-plugins.md)
-- [Advanced Plugin Patterns](../Documentation/12-advanced-plugin-patterns.md)
-- [Common Plugin Features](../Documentation/14-common-plugin-features.md)
-
----
-
-## Contributing
-
-Contributions are welcome! Please:
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
-
----
-
-## License
-
-This template is released under the MIT License. You are free to use it for any purpose.
-
----
-
-## Support
-
-- **Issues:** [GitHub Issues](https://github.com/yourusername/hytale-plugin-template/issues)
-- **Documentation:** [Hytale Modding Docs](https://github.com/yourusername/hytale-modding)
-- **Community:** Join the Hytale modding community
-
----
-
-## Credits
-
-Created by the Hytale modding community.
-
-Based on best practices from production Hytale plugins.
-
----
-
-**Happy Modding! 🎮**
+The final JAR will be located in `build/libs/`.
