@@ -46,6 +46,7 @@ hytale.owner.uuid=
 hytale.version=latest
 
 # --- Server Startup Settings ---
+hytale.server.port=5520
 hytale.auth.mode=authenticated
 hytale.singleplayer.enabled=false
 ```
@@ -97,6 +98,10 @@ This file gives you full control over the test server's behavior.
 -   `hytale.version`
     -   The game version folder to use from your Hytale installation.
     -   Default: `latest`
+
+-   `hytale.server.port`
+    -   The network port the server will listen on.
+    -   Default: `5520`
 
 -   `hytale.auth.mode`
     -   `authenticated`: (Default) Requires online authentication. The script will help you with this.
