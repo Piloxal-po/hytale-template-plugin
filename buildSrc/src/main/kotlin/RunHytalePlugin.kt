@@ -47,7 +47,7 @@ abstract class RunServerTask : DefaultTask() {
         // --- Find Hytale Installation ---
         val hytaleInstallDir = findHytaleGameDir(config.version)
         if (hytaleInstallDir == null || !hytaleInstallDir.exists()) {
-            throw IllegalStateException("Hytale installation not found for version '${config.version}'. Searched in: .../Hytale/install/release/package/game/${config.version}")
+            throw IllegalStateException("Hytale installation not found for version '${config.version}'. Searched in platform-specific directories.")
         }
         println("Found Hytale installation for version '${config.version}' at: $hytaleInstallDir")
 
@@ -103,7 +103,7 @@ abstract class RunServerTask : DefaultTask() {
         println("Starting Hytale server with args: ${serverArgs.joinToString(" ")}")
         println("Press Ctrl+C to stop the server")
 
-        val jvmArgs = mutableListOf<String>()
+        val jvmArgs = buildJvmArgs(config)
         if (project.hasProperty("debug")) {
             jvmArgs.add("-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005")
             println("Debug mode enabled. Connect debugger to port 5005")
@@ -169,6 +169,20 @@ abstract class RunServerTask : DefaultTask() {
                 # This is often required for 'offline' mode to work correctly with the client.
                 # Possible values: true, false
                 hytale.singleplayer.enabled=false
+                
+                # --- Advanced Settings ---
+                
+                # Command to automatically run when the server has booted.
+                # Leave blank to disable. Default is '/auth login device' for authenticated mode.
+                hytale.server.autoCommand=
+                
+                # Extra arguments for the Java Virtual Machine (JVM), like memory allocation.
+                # Example: -Xmx4G -Dsome.flag=true
+                hytale.jvm.args=
+                
+                # Extra command-line arguments to pass directly to HytaleServer.jar.
+                # Example: --some-new-option value --another-option
+                hytale.server.extraArgs=
             """.trimIndent()
             
             localPropertiesFile.writeText(defaultConfig)
@@ -195,12 +209,29 @@ abstract class RunServerTask : DefaultTask() {
             args.add("--owner-uuid")
             args.add(config.ownerUuid)
         }
+        
+        // Add extra server arguments from local.properties
+        config.extraServerArgs.split(" ").filter { it.isNotBlank() }.forEach { args.add(it) }
+        
         return args
+    }
+    
+    private fun buildJvmArgs(config: ServerConfig): MutableList<String> {
+        return config.jvmArgs.split(" ").filter { it.isNotBlank() }.toMutableList()
     }
 
     private fun findHytaleGameDir(version: String): File? {
-        val appData = System.getenv("APPDATA") ?: return null
-        return File(appData, "Hytale/install/release/package/game/$version")
+        val os = System.getProperty("os.name").lowercase()
+        val userHome = System.getProperty("user.home")
+        
+        val path = when {
+            os.contains("win") -> "${System.getenv("APPDATA")}/Hytale/install/release/package/game/$version"
+            os.contains("mac") -> "$userHome/Library/Application Support/Hytale/install/release/package/game/$version"
+            os.contains("nix") || os.contains("nux") || os.contains("aix") -> "$userHome/.local/share/Hytale/install/release/package/game/$version"
+            else -> null
+        }
+        
+        return path?.let { File(it) }
     }
 
     private fun setupGracefulShutdown(process: Process) {
@@ -219,13 +250,13 @@ abstract class RunServerTask : DefaultTask() {
             process.inputStream.bufferedReader().useLines { lines ->
                 lines.forEach { line ->
                     println(line) // Print the server log line
-                    // When server has booted and we are in authenticated mode, send the command
-                    if (!commandSent && config.authMode == "authenticated" && line.contains("Hytale Server Booted!")) {
-                        println("Server has booted. Automatically sending '/auth login device' command...")
+                    // When server has booted, send the configured auto-command
+                    if (!commandSent && config.autoCommand.isNotBlank() && line.contains("Hytale Server Booted!")) {
+                        println("Server has booted. Automatically sending '${config.autoCommand}' command...")
                         try {
-                            process.outputStream.write(("/auth login device\n").toByteArray())
+                            process.outputStream.write(("${config.autoCommand}\n").toByteArray())
                             process.outputStream.flush()
-                            println("Command sent. Please follow the authentication steps that appear below.")
+                            println("Command sent.")
                             commandSent = true
                         } catch (e: IOException) {
                             System.err.println("Error sending automatic command: ${e.message}")
@@ -264,6 +295,9 @@ private class ServerConfig(properties: Properties) {
     val singleplayerEnabled: Boolean = properties.getProperty("hytale.singleplayer.enabled", "false").toBoolean()
     val ownerName: String
     val ownerUuid: String
+    val autoCommand: String
+    val jvmArgs: String = properties.getProperty("hytale.jvm.args", "")
+    val extraServerArgs: String = properties.getProperty("hytale.server.extraArgs", "")
 
     init {
         if (singleplayerEnabled) {
@@ -275,5 +309,7 @@ private class ServerConfig(properties: Properties) {
             ownerName = ""
             ownerUuid = ""
         }
+        
+        autoCommand = properties.getProperty("hytale.server.autoCommand", if (authMode == "authenticated") "/auth login device" else "")
     }
 }

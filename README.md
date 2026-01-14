@@ -5,6 +5,7 @@ This project is a pre-configured development environment for creating and testin
 ## Features
 
 - **Automated Server Setup**: Finds your local Hytale installation and sets up a test server automatically.
+- **Cross-Platform Support**: Automatically locates the Hytale installation on Windows, macOS, and Linux.
 - **Dynamic Configuration**: Control server behavior via a simple `local.properties` file.
 - **One-Command Execution**: Run a single command to build your plugin and launch the server.
 - **Fast Iteration**: By default, the server environment is preserved for faster startups.
@@ -35,27 +36,7 @@ The server will likely fail on this first run, which is **normal**. The script w
 
 ### 2. Configure `local.properties`
 
-Open the newly created `local.properties` file. It will look like this:
-
-```properties
-# --- Player Information (for singleplayer/offline mode) ---
-hytale.owner.name=
-hytale.owner.uuid=
-
-# --- Hytale Version ---
-hytale.version=latest
-
-# --- Server Startup Settings ---
-hytale.server.port=5520
-hytale.auth.mode=authenticated
-hytale.singleplayer.enabled=false
-```
-
-- **If you plan to use `authenticated` mode (recommended):** You don't need to change anything at first.
-- **If you plan to use `offline` mode:**
-    1. Set `hytale.auth.mode=offline`.
-    2. Set `hytale.singleplayer.enabled=true`.
-    3. **Fill in `hytale.owner.name` and `hytale.owner.uuid`** with your Hytale username and UUID.
+Open the newly created `local.properties` file. You will need to fill in your details depending on the authentication mode you choose.
 
 ### 3. Run the Server Again
 
@@ -65,25 +46,7 @@ Now, run the same command again:
 ./gradlew runServer
 ```
 
-The server will start.
-
-### 4. Authenticate (for `authenticated` mode)
-
-If you are using the default `authenticated` mode, the script will automatically send the `/auth login device` command to the server. In your console, you will see a message like this:
-
-```
-[INFO] [AbstractCommand] ===================================================================
-[INFO] [AbstractCommand] DEVICE AUTHORIZATION
-[INFO] [AbstractCommand] ===================================================================
-[INFO] [AbstractCommand] Visit: https://oauth.accounts.hytale.com/oauth2/device/verify
-[INFO] [AbstractCommand] Enter code: LTMqxw4a
-[INFO] [AbstractCommand] Or visit: https://oauth.accounts.hytale.com/oauth2/device/verify?user_code=LTMqxw4a
-[INFO] [AbstractCommand] ===================================================================
-```
-
-1.  Click the link provided (`.../verify?user_code=...`).
-2.  Authorize the device in your web browser.
-3.  Once authorized, you can connect to the server from your Hytale client.
+The server will start. If you are using `authenticated` mode, follow the on-screen instructions to authorize the server via your web browser.
 
 ---
 
@@ -96,7 +59,7 @@ This file gives you full control over the test server's behavior.
     -   **Required** only if `hytale.singleplayer.enabled` is `true`.
 
 -   `hytale.version`
-    -   The game version folder to use from your Hytale installation.
+    -   The game version folder to use from your Hytale installation (e.g., `latest`, `dev`).
     -   Default: `latest`
 
 -   `hytale.server.port`
@@ -104,13 +67,25 @@ This file gives you full control over the test server's behavior.
     -   Default: `5520`
 
 -   `hytale.auth.mode`
-    -   `authenticated`: (Default) Requires online authentication. The script will help you with this.
+    -   `authenticated`: (Default) Requires online authentication.
     -   `offline`: For local/LAN play. Requires `singleplayer.enabled=true` and owner information.
     -   `insecure`: A developer-only mode that may not be compatible with release clients.
 
 -   `hytale.singleplayer.enabled`
     -   `true`: Runs the server as a singleplayer world. Required for `offline` mode.
     -   `false`: (Default) Runs the server as a multiplayer instance.
+
+-   `hytale.server.autoCommand`
+    -   A command to automatically run when the server has booted.
+    -   Default: `/auth login device` (when `auth.mode` is `authenticated`). Leave blank to disable.
+
+-   `hytale.jvm.args`
+    -   Extra arguments for the Java Virtual Machine (JVM), like memory allocation.
+    -   Example: `-Xmx4G -Dsome.flag=true`
+
+-   `hytale.server.extraArgs`
+    -   Extra command-line arguments to pass directly to `HytaleServer.jar`.
+    -   Example: `--some-new-option value --another-option`
 
 ---
 
