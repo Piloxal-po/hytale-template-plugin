@@ -41,7 +41,7 @@ abstract class RunServerTask : DefaultTask() {
 
     @TaskAction
     fun run() {
-        // --- Load Local Properties ---
+        // --- Load Local Properties (or create default) ---
         val config = loadLocalConfig()
 
         // --- Find Hytale Installation ---
@@ -59,10 +59,6 @@ abstract class RunServerTask : DefaultTask() {
 
         // --- Setup Run Directory ---
         val rootRunDir = File(project.projectDir, "run")
-        val serverDir = File(rootRunDir, "server")
-        val modsDir = File(serverDir, "mods")
-
-        // Conditionally clean the run directory if -PcleanRun is passed
         if (project.hasProperty("cleanRun")) {
             println("Cleaning up previous run due to -PcleanRun flag...")
             if (rootRunDir.exists()) {
@@ -70,8 +66,8 @@ abstract class RunServerTask : DefaultTask() {
             }
         }
         
-        serverDir.mkdirs()
-        modsDir.mkdirs()
+        val serverDir = File(rootRunDir, "server").apply { mkdirs() }
+        val modsDir = File(serverDir, "mods").apply { mkdirs() }
         
         // --- Copy Game Files if they don't exist ---
         val destAssetsZip = File(modsDir, "Assets.zip")
@@ -156,6 +152,10 @@ abstract class RunServerTask : DefaultTask() {
                 # Server Startup Settings
                 # ==========================================
 
+                # Server Port
+                # The port the server will listen on.
+                hytale.server.port=5520
+
                 # Authentication Mode
                 # Defines how the server handles player authentication.
                 # Possible values:
@@ -181,6 +181,10 @@ abstract class RunServerTask : DefaultTask() {
 
     private fun buildServerArgs(config: ServerConfig): List<String> {
         val args = mutableListOf<String>()
+        
+        args.add("--bind")
+        args.add(config.port.toString())
+
         args.add("--auth-mode")
         args.add(config.authMode)
 
@@ -255,6 +259,7 @@ abstract class RunServerTask : DefaultTask() {
  */
 private class ServerConfig(properties: Properties) {
     val version: String = properties.getProperty("hytale.version", "latest")
+    val port: Int = properties.getProperty("hytale.server.port", "5520").toInt()
     val authMode: String = properties.getProperty("hytale.auth.mode", "authenticated")
     val singleplayerEnabled: Boolean = properties.getProperty("hytale.singleplayer.enabled", "false").toBoolean()
     val ownerName: String
